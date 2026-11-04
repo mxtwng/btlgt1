@@ -1,0 +1,229 @@
+% ============================================================
+% Mục 8. Tính toán / mô phỏng / thực nghiệm  (Đề tài 9)
+% Đoạn nội dung (không có preamble): dùng \input{muc8}.
+% Cần: amsmath, booktabs, graphicx. Bảng nằm trong generated/ (tự sinh bởi
+% make_tables.py từ output/tables), hình nằm trong ../output/figures.
+% Chỉ nêu SỐ LIỆU quan sát được; phần diễn giải ý nghĩa thuộc Mục kết quả và phân tích.
+% ============================================================
+\section{Tính toán, mô phỏng và thực nghiệm}\label{sec:thucnghiem}
+
+\subsection{Cài đặt và kiểm chứng}
+Chương trình được viết bằng Python (NumPy, pandas, Matplotlib) và chia thành các tệp
+riêng: \texttt{src/model.py} (hai mô hình cầu và các đạo hàm tính tay),
+\texttt{src/sensitivity.py} (thay đổi thực, vi phân, sai số, độ nhạy, bậc hội tụ, xấp xỉ
+bậc hai, vùng tin cậy), \texttt{src/montecarlo.py} (mô phỏng nhiễu giá),
+\texttt{experiments.py} (chạy các thí nghiệm, xuất bảng CSV và hình PNG) và
+\texttt{app.py} (ứng dụng tương tác dùng chung mã với báo cáo). Phần mềm chỉ dùng để
+tính toán, vẽ đồ thị và kiểm chứng: mọi đạo hàm và công thức sai số được cài đặt từ
+các biểu thức ở Mục~\ref{sec:phuongphap}, không gọi hàm có sẵn để tạo kết quả chính.
+
+Việc kiểm chứng do \texttt{verify.py} thực hiện: với $40$ điểm trong miền xác định, các hàm
+$q,R,P$ và đạo hàm cấp một, cấp hai cài đặt trong chương trình khớp SymPy với sai lệch
+tương đối nhỏ hơn $10^{-9}$, và đạo hàm cấp một khớp sai phân trung tâm với sai lệch
+tương đối nhỏ hơn $10^{-5}$; ngoài ra $P'(p^*)=0$ với sai số dưới $10^{-8}$.
+Mọi số liệu dưới đây được sinh lại bằng một lệnh (\texttt{uv run experiments.py}) với hạt
+giống mô phỏng cố định, nên chạy lại cho kết quả giống hệt.
+
+Tám thí nghiệm (TN) được thực hiện trên hai mô hình ở Bảng~\ref{tab:par}:
+
+\begin{table}[ht]
+\tbsty
+\caption{Các thí nghiệm và công cụ Giải tích tương ứng.}\label{tab:tn}
+\begin{tabular}{@{}l p{6.2cm} p{6.2cm}@{}}
+\toprule
+TN & Câu hỏi & Công cụ \\
+\midrule
+1 & Vi phân dự báo thay đổi thực tốt đến đâu? & vi phân, sai số tuyệt đối/tương đối \\
+2 & Xấp xỉ tuyến tính trông thế nào? & tiếp tuyến \\
+3 & Sai số giảm theo $\Delta p$ với bậc bao nhiêu? & khai triển Taylor, hồi quy log-log \\
+4 & Đại lượng nào nhạy nhất với giá? & độ nhạy tương đối $S$ \\
+5 & Kết quả có đổi khi đổi tham số mô hình không? & quét $b$ (L) và $k$ (E) \\
+6 & Giá nhiễu ngẫu nhiên thì $\Delta P$ phân bố ra sao? & Monte Carlo, Taylor \\
+7 & Vi phân dùng được đến mức lệch giá nào? & vùng tin cậy theo ngưỡng $\tau$ \\
+8 & Thêm số hạng bậc hai cải thiện bao nhiêu? & xấp xỉ Taylor bậc hai \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{TN1: So sánh thay đổi thực và vi phân}
+Với mỗi mức lệch $\Delta p/p_0\in\{\pm1,\pm2,\pm5,\pm10,\pm20\}\%$ ta tính $\Delta P$ thực,
+$dP=P'(p_0)\Delta p$ và sai số (Bảng~\ref{tab:tn1l} và~\ref{tab:tn1e}; đơn vị của $\Delta P$,
+$dP$ là nghìn đồng/tuần).
+
+\begin{table}[ht]
+\tbsty
+\caption{Lợi nhuận $P$ tại $p_0=50$, mô hình (L).}\label{tab:tn1l}
+\input{generated/tn1_linear}
+\end{table}
+
+\begin{table}[ht]
+\tbsty
+\caption{Lợi nhuận $P$ tại $p_0=40$, mô hình (E).}\label{tab:tn1e}
+\input{generated/tn1_elastic}
+\end{table}
+
+Ở mô hình (L), $E_{\mathrm{rel}}$ tăng từ $1{,}0\%$ ($\Delta p/p_0=\pm1\%$) lên $5{,}3\%$
+($+5\%$) và $25{,}0\%$ ($+20\%$); ở mô hình (E) từ $2{,}5\%$ lên $13{,}1\%$ và $60{,}0\%$. Với
+(L), $P$ là hàm bậc hai nên $|\Delta P-dP|=\tfrac12|P''|\Delta p^2$ đối xứng giữa hai phía
+(ví dụ $62{,}5$ cho cả $\pm5\%$), còn $E_{\mathrm{rel}}$ không đối xứng ($4{,}76\%$ và $5{,}26\%$)
+vì $\Delta P$ ở hai phía khác nhau.
+
+Tại giá tối ưu $p^*$ (với $P'(p^*)=0$) thì $dP=0$; thay đổi thực khi giá tăng $5\%$ là
+$-140{,}6$ (mô hình L, $p^*=75$) và $-18{,}9$ (mô hình E, $p^*=60$), nên $E_{\mathrm{rel}}=100\%$.
+Với $q$ và $R$, kết quả tương tự được lưu trong \texttt{output/tables/}.
+
+\subsection{TN2: Tiếp tuyến và đường cong}
+Hình~\ref{fig:tn2l} và~\ref{fig:tn2e} vẽ $q,R,P$ cùng tiếp tuyến tại $p_0$; dải tô màu là
+$p_0\pm20\%$. Khoảng cách giữa đường cong và tiếp tuyến chính là sai số của xấp xỉ vi phân,
+nhỏ gần $p_0$ và tăng nhanh khi ra xa.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\textwidth]{TN2_tangent_linear.png}
+\caption{Mô hình (L): $q$, $R$, $P$ và tiếp tuyến tại $p_0=50$.}\label{fig:tn2l}
+\end{figure}
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\textwidth]{TN2_tangent_elastic.png}
+\caption{Mô hình (E): $q$, $R$, $P$ và tiếp tuyến tại $p_0=40$.}\label{fig:tn2e}
+\end{figure}
+
+\subsection{TN3: Bậc của sai số}
+Hệ số góc log-log của $E_{\mathrm{abs}}$ theo $|\Delta p|$ (cách đo ở Mục~\ref{sec:phuongphap}) cho trong
+Bảng~\ref{tab:tn3}; kỳ vọng là $2$.
+
+\begin{table}[ht]
+\tbsty
+\caption{Hệ số góc log-log của sai số vi phân. Dấu ``---'': sai số bằng $0$.}\label{tab:tn3}
+\input{generated/tn3}
+\end{table}
+
+Ở (L), $R$ và $P$ cho đúng $2{,}000$, còn $q$ là hàm tuyến tính nên sai số bằng $0$. Ở (E), các
+hệ số góc nằm trong khoảng $1{,}96$ đến $1{,}98$, gần $2$ nhưng hơi lệch vì lưới $\Delta p$ trải đến
+$30\%$ nên các số hạng bậc cao bắt đầu có ảnh hưởng (Hình~\ref{fig:tn3}).
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\textwidth]{TN3_error_loglog.png}
+\caption{Sai số $|\Delta y-dy|$ theo $|\Delta p|$ (thang log-log) và đường tham chiếu $\propto\Delta p^2$.}\label{fig:tn3}
+\end{figure}
+
+\subsection{TN4: Độ nhạy tương đối}
+Bảng~\ref{tab:tn4} cho $S=f'p/f$ tại $p_0$ và $p^*$; Hình~\ref{fig:tn4} vẽ $S(p)$ (cắt ở $|S|>12$).
+
+\begin{table}[ht]
+\tbsty
+\caption{Độ nhạy tương đối của $q$, $R$, $P$ theo giá.}\label{tab:tn4}
+\input{generated/tn4}
+\end{table}
+
+Tại $p_0$, ở (L) $|S_P|=1{,}786$ lớn nhất, sau đó là $|S_q|=0{,}714$ và $|S_R|=0{,}286$; ở (E)
+$S_q=-2$, $S_R=-1$, $S_P=2$, trong đó $|S_P|$ và $|S_q|$ bằng nhau. Các giá trị khớp với hệ
+thức~\eqref{eq:S}: ví dụ ở (L), $S_P=50/20-0{,}714=1{,}786$; ở (E), $S_P=40/10-2=2$. Tại $p^*$,
+$S_P=0$ ở cả hai mô hình.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\textwidth]{TN4_elasticity.png}
+\caption{Độ nhạy $S_q$, $S_R$, $S_P$ theo giá $p$ (đường chấm: $p_0$ và $p^*$).}\label{fig:tn4}
+\end{figure}
+
+\subsection{TN5: Ảnh hưởng của tham số mô hình}
+Cố định $\Delta p=+10\%$ và thay đổi độ dốc cầu $b$ (mô hình L) hoặc độ co giãn $k$ (mô hình E); các
+bảng cho $E_{\mathrm{rel}}$ của $q$, $R$, $P$.
+
+\begin{center}
+\linespread{1}\small\selectfont
+\begin{minipage}[t]{0.48\textwidth}\centering
+\captionof{table}{Mô hình (L): $E_{\mathrm{rel}}$ (\%) khi thay đổi $b$.}\label{tab:tn5l}
+\input{generated/tn5_linear}
+\end{minipage}\hfill
+\begin{minipage}[t]{0.48\textwidth}\centering
+\captionof{table}{Mô hình (E): $E_{\mathrm{rel}}$ (\%) khi thay đổi $k$.}\label{tab:tn5e}
+\input{generated/tn5_elastic}
+\end{minipage}
+\end{center}
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\textwidth]{TN5_param_study.png}
+\caption{Sai số tương đối của xấp xỉ vi phân khi $\Delta p=+10\%$ theo tham số mô hình.}\label{fig:tn5}
+\end{figure}
+
+Ở (L), $q$ luôn có sai số $0$. Sai số của $P$ không đơn điệu theo $b$: nó đạt $100\%$ tại $b=15$, vì khi
+đó $p^*=(a+bc)/(2b)=55$ đúng bằng giá mới $p_0+10\%$, nên $\Delta P=dP/2$. Sai số của $R$ lớn nhất ở
+$b=12{,}5$, gần $b=12$ là lúc $R'(p_0)=a-2bp_0=0$. Ở (E), sai số của cả ba đại lượng tăng theo $k$;
+$P$ đạt $100\%$ tại $k=4$ vì khi đó $p^*=ck/(k-1)=40=p_0$, tức $P'(p_0)=0$ và $dP=0$.
+
+\subsection{TN6: Mô phỏng Monte Carlo}
+Giá thực tế $p=p_0(1+\varepsilon)$, $\varepsilon\sim N(0,\sigma^2)$, $N=200\,000$ mẫu, hạt giống
+$20260503$. Bảng~\ref{tab:tn6} so sánh trung bình và độ lệch chuẩn của $\Delta P$ với
+dự đoán~\eqref{eq:mc} (đơn vị nghìn đồng/tuần); Hình~\ref{fig:tn6} là phân bố của $\Delta P$ ở mô hình (L)
+với $\sigma=10\%$.
+
+\begin{table}[ht]
+\tbsty
+\caption{Monte Carlo: $\Delta P$ thực và dự đoán từ khai triển Taylor.}\label{tab:tn6}
+{\setlength{\tabcolsep}{5pt}\input{generated/tn6}}
+\end{table}
+
+Tại $p_0$, độ lệch chuẩn mô phỏng sát dự đoán $|P'|p_0\sigma$ (ví dụ $248{,}5$ so với $250{,}0$ ở (L),
+$\sigma=1\%$), và trung bình âm sát $\tfrac12P''(p_0\sigma)^2$; độ lệch tăng khi $\sigma$ lớn ở mô
+hình (E) ($1\,499$ so với $1\,250$ khi $\sigma=10\%$). Tại $p^*$ dự đoán bậc nhất của độ lệch chuẩn
+bằng $0$ nhưng mô phỏng cho giá trị dương và trung bình âm, phù hợp với $\Delta P\approx\tfrac12P''(p^*\varepsilon)^2\le0$:
+với $\sigma=5\%$, công thức $|P''|(p^*\sigma)^2/\sqrt2$ cho $198{,}9$ (L) và $29{,}5$ (E), so với $196{,}2$ và
+$31{,}5$ mô phỏng.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\textwidth]{TN6_montecarlo_hist.png}
+\caption{Phân bố của $\Delta P$ ở mô hình (L), $\sigma=10\%$: tại $p_0$ (trái) và tại $p^*$ (phải).}\label{fig:tn6}
+\end{figure}
+
+\subsection{TN7: Vùng tin cậy của vi phân}
+Bảng~\ref{tab:tn7} cho mức lệch giá lớn nhất (tính theo $\%$ của $p_0$, dạng ``tăng\,/\,giảm'') để
+$E_{\mathrm{rel}}\le\tau$; ``$\geq 50$'' nghĩa là không chạm ngưỡng trong khoảng khảo sát.
+
+\begin{table}[ht]
+\tbsty
+\caption{Vùng tin cậy của vi phân (đơn vị: $\%$ của $p_0$).}\label{tab:tn7}
+\input{generated/tn7}
+\end{table}
+
+Vùng tin cậy tăng xấp xỉ tỉ lệ với $\tau$ (ví dụ $P$ ở (L): $0{,}95$; $4{,}75$; $9{,}05$ cho $\tau=1;5;10\%$),
+đúng như ước lượng~\eqref{eq:safe}. Với cùng $\tau=5\%$, ở (L) $R$ có vùng hẹp nhất ($+1{,}90/-2{,}10$)
+còn $q$ chính xác tuyệt đối, trong khi ở (E) $P$ hẹp nhất ($+1{,}95/-2{,}00$). Tại $p^*$ vùng bằng $0$.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\textwidth]{TN7_erel_vs_delta.png}
+\caption{$E_{\mathrm{rel}}$ theo $\Delta p/p_0$ tại $p_0$ (đường chấm: ngưỡng $5\%$).}\label{fig:tn7}
+\end{figure}
+
+\subsection{TN8: Xấp xỉ bậc hai}
+Bảng~\ref{tab:tn8} so sánh vi phân bậc một $dP$ và xấp xỉ bậc hai $dP_2$ cho $P$ ở mô hình (E).
+Ở mô hình (L), $R$ và $P$ là đa thức bậc hai nên $dP_2$ trùng $\Delta P$ ở mọi dòng (sai số $0$).
+
+\begin{table}[ht]
+\tbsty
+\caption{Mô hình (E): $P$ tại $p_0=40$ và $p^*=60$, xấp xỉ bậc một và bậc hai.}\label{tab:tn8}
+{\setlength{\tabcolsep}{5pt}\input{generated/tn8_elastic}}
+\end{table}
+
+Tại $p_0$ với $\Delta p/p_0=+5\%$, $E_{\mathrm{rel}}$ giảm từ $13{,}08\%$ xuống $1{,}06\%$; với $+10\%$ từ
+$27{,}37\%$ xuống $4{,}47\%$; với $+20\%$ từ $60{,}00\%$ xuống $20{,}00\%$. Tại $p^*$, vi phân bậc một cho
+$dP=0$ ($E_{\mathrm{rel}}=100\%$) còn $dP_2$ bắt được thay đổi thực với sai số $10{,}25\%$ ($+5\%$) và
+$9{,}75\%$ ($-5\%$). Hệ số góc log-log (Bảng~\ref{tab:tn8o}, Hình~\ref{fig:tn8}) xấp xỉ $2$ cho bậc một và
+xấp xỉ $3$ cho bậc hai ($2{,}95$ đến $2{,}96$ ở mô hình E), khớp với lý thuyết ở Mục~\ref{sec:phuongphap}.
+
+\begin{table}[ht]
+\tbsty
+\caption{Hệ số góc log-log của sai số xấp xỉ bậc một và bậc hai. Dấu ``---'': sai số bằng $0$.}\label{tab:tn8o}
+\input{generated/tn8_orders}
+\end{table}
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\textwidth]{TN8_second_order_loglog.png}
+\caption{Sai số của xấp xỉ bậc một và bậc hai theo $|\Delta p|$ (log-log).}\label{fig:tn8}
+\end{figure}

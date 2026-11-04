@@ -3,7 +3,7 @@
 % Đây là đoạn nội dung (không có preamble): dùng \input{muc6} hoặc dán vào báo cáo.
 % Cần: amsmath, booktabs. Số liệu khớp với src/model.py.
 % ============================================================
-\section{Mô hình toán học}
+\section{Mô hình toán học}\label{sec:mohinh}
 
 \subsection{Bối cảnh và đại lượng khảo sát}
 Xét một doanh nghiệp bán một loại sản phẩm với giá bán $p$. Giá bán là đại lượng
@@ -63,14 +63,15 @@ P(p) &= A\,p^{1-k} - cA\,p^{-k}.
 \end{align}
 
 \subsection{Giá tối ưu}
-Giá tối ưu $p^*$ là điểm làm lợi nhuận lớn nhất, thỏa $P'(p^*)=0$ (cách tính ở Mục~7):
+Giá tối ưu $p^*$ là điểm làm lợi nhuận lớn nhất, thỏa $P'(p^*)=0$ (cách tính ở
+Mục~\ref{sec:phuongphap}):
 \begin{equation}
 \text{(L)}\quad p^* = \frac{a+bc}{2b}, \qquad\qquad
 \text{(E)}\quad p^* = \frac{ck}{k-1}.
 \end{equation}
 Điểm $p^*$ có vai trò đặc biệt trong bài toán độ nhạy: tại đó đạo hàm bậc nhất của $P$
 bằng $0$, nên vi phân bậc nhất không còn phản ánh đúng sự thay đổi của lợi nhuận
-(xem Mục~8).
+(xem Mục~\ref{sec:thucnghiem}).
 
 \subsection{Bộ tham số của ví dụ}
 Nhóm sử dụng bộ tham số giả định, do nhóm tự xây dựng (không lấy từ giáo trình), với

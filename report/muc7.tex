@@ -1,0 +1,162 @@
+% ============================================================
+% Mục 7. Phương pháp giải  (Đề tài 9)
+% Đoạn nội dung (không có preamble): dùng \input{muc7}. Cần amsmath.
+% Khớp với src/sensitivity.py và src/montecarlo.py.
+% ============================================================
+\section{Phương pháp giải}\label{sec:phuongphap}
+
+Mục này trình bày các công cụ của Giải tích 1 dùng để trả lời câu hỏi của đề tài: khi
+giá thực tế lệch khỏi giá dự kiến, vi phân dự báo sự thay đổi của $q$, $R$, $P$ sai
+bao nhiêu, và khi nào nên tin dự báo đó. Ký hiệu theo Mục~\ref{sec:mohinh}: $p_0$ là
+giá hiện tại, $\Delta p$ là sai số giá, $y=f(p)\in\{q,R,P\}$ là đại lượng đầu ra.
+
+\subsection{Thay đổi thực, vi phân và sai số}
+Thay đổi \emph{thực} và \emph{vi phân} của $y$ khi giá đổi từ $p_0$ sang $p_0+\Delta p$ là
+\begin{equation}\label{eq:dy}
+\Delta y = f(p_0+\Delta p)-f(p_0), \qquad dy = f'(p_0)\,\Delta p .
+\end{equation}
+Về hình học, $dy$ là độ thay đổi của \emph{tiếp tuyến} của đồ thị tại $p_0$, còn
+$\Delta y$ là độ thay đổi của chính đường cong. Sai số của xấp xỉ vi phân được đo bằng
+\begin{equation}
+E_{\mathrm{abs}} = |\Delta y - dy|, \qquad
+E_{\mathrm{rel}} = \frac{|\Delta y - dy|}{|\Delta y|}\quad(\Delta y\neq 0).
+\end{equation}
+Ở đây sai số tương đối được tính so với thay đổi thực $\Delta y$ (không phải so với giá
+trị $y_0$), vì câu hỏi cần trả lời là: \emph{dự báo sự thay đổi lệch bao nhiêu phần
+trăm so với sự thay đổi thật}.
+
+\subsection{Đạo hàm của các hàm đầu ra}
+Các đạo hàm được tính tay và cài đặt trực tiếp trong \texttt{src/model.py}.
+
+\paragraph{Mô hình (L).}
+\begin{align*}
+q' &= -b, & q'' &= 0, \\
+R' &= a-2bp, & R'' &= -2b, \\
+P' &= a+bc-2bp, & P'' &= -2b.
+\end{align*}
+
+\paragraph{Mô hình (E).}
+\begin{align*}
+q' &= -kA\,p^{-k-1}, & q'' &= k(k+1)A\,p^{-k-2}, \\
+R' &= (1-k)A\,p^{-k}, & R'' &= k(k-1)A\,p^{-k-1}, \\
+P' &= A\,p^{-k-1}\bigl[(1-k)p+ck\bigr], &
+P'' &= kA\,p^{-k-2}\bigl[(k-1)p-c(k+1)\bigr].
+\end{align*}
+
+\paragraph{Giá tối ưu.}
+Giải $P'(p^*)=0$: ở (L), $a+bc-2bp^*=0$ cho $p^*=(a+bc)/(2b)$; ở (E), vì
+$A\,p^{-k-1}>0$ nên $(1-k)p^*+ck=0$, tức $p^*=ck/(k-1)$. Đó là điểm cực đại vì
+$P''(p^*)<0$: ở (L), $P''=-2b<0$; ở (E), thay $(k-1)p^*=ck$ vào ngoặc vuông của $P''$
+được $ck-c(k+1)=-c$, nên $P''(p^*)=-ckA\,(p^*)^{-k-2}<0$.
+
+Để kiểm tra các đạo hàm cài đặt đúng, chương trình \texttt{verify.py} so sánh $f$,
+$f'$, $f''$ với kết quả của SymPy và so sánh $f'$ với sai phân trung tâm; SymPy chỉ
+dùng để kiểm chứng, không tham gia tính các kết quả chính.
+
+\subsection{Sai số của vi phân: khai triển Taylor}
+Với $f$ có đạo hàm cấp hai liên tục, công thức Taylor với phần dư Lagrange cho một số
+$\xi$ nằm giữa $p_0$ và $p_0+\Delta p$ sao cho
+\begin{equation}\label{eq:taylor}
+\Delta y = f'(p_0)\Delta p + \tfrac12 f''(\xi)\,\Delta p^2
+\quad\Longrightarrow\quad
+E_{\mathrm{abs}} = \tfrac12 |f''(\xi)|\,\Delta p^2 \le \frac{M}{2}\,\Delta p^2,
+\end{equation}
+với $M=\max|f''|$ trên đoạn giữa $p_0$ và $p_0+\Delta p$. Từ~\eqref{eq:taylor} suy ra:
+\begin{enumerate}
+  \item Sai số của vi phân có \emph{bậc hai} theo $\Delta p$: giảm $\Delta p$ đi $10$
+        lần thì $E_{\mathrm{abs}}$ giảm khoảng $100$ lần.
+  \item Nếu $f''\equiv 0$ (ví dụ $q$ ở mô hình L) thì vi phân chính xác tuyệt đối. Nếu
+        $f$ là đa thức bậc hai (ví dụ $R$, $P$ ở mô hình L) thì
+        $E_{\mathrm{abs}}=\tfrac12|f''|\Delta p^2$ chính xác, không chỉ là cận trên.
+  \item Khi $\Delta p$ nhỏ và $f'(p_0)\neq 0$ thì $\Delta y\approx f'(p_0)\Delta p$, nên
+        \begin{equation}\label{eq:erel}
+        E_{\mathrm{rel}}\approx \frac{|f''(p_0)|\,|\Delta p|}{2\,|f'(p_0)|}.
+        \end{equation}
+        Sai số tương đối nhỏ khi đường cong ít cong ($|f''|$ nhỏ) so với độ dốc ($|f'|$ lớn).
+\end{enumerate}
+Ví dụ, với $P$ ở mô hình (L) tại $p_0=50$ ta có $P'(50)=500$, $P''=-20$; nếu
+$\Delta p=2{,}5$ (tức $5\%$) thì~\eqref{eq:erel} cho $E_{\mathrm{rel}}\approx 5\%$.
+
+\paragraph{Đo bậc của sai số bằng thực nghiệm.}
+Lấy $40$ giá trị $\Delta p/p_0$ cách đều theo thang logarit từ $10^{-4}$ đến $30\%$, tính
+$E_{\mathrm{abs}}$ cho từng giá trị, rồi hồi quy tuyến tính (bình phương tối thiểu)
+$\log_{10}E_{\mathrm{abs}}$ theo $\log_{10}|\Delta p|$. Từ~\eqref{eq:taylor},
+$\log E_{\mathrm{abs}}\approx \log(\tfrac12|f''|)+2\log|\Delta p|$, nên hệ số góc phải
+xấp xỉ $2$. Các điểm có $E_{\mathrm{abs}}$ nhỏ hơn $10^{-9}$ (cỡ sai số làm tròn của số
+thực) bị loại; nếu còn ít hơn $3$ điểm thì coi sai số bằng $0$ và không có hệ số góc.
+
+\subsection{Độ nhạy tương đối}
+Chia $dy$ cho $y_0=f(p_0)$ và viết $\Delta p=p_0\cdot(\Delta p/p_0)$:
+\begin{equation}
+\frac{\Delta y}{y_0}\approx \frac{f'(p_0)\,p_0}{f(p_0)}\cdot\frac{\Delta p}{p_0}
+= S(p_0)\,\frac{\Delta p}{p_0},
+\qquad S(p)=\frac{f'(p)\,p}{f(p)} .
+\end{equation}
+Vậy $S$ cho biết \emph{giá tăng $1\%$ thì $y$ thay đổi xấp xỉ $S\%$}; $S$ không có đơn vị
+nên so sánh được giữa $q$, $R$, $P$. Vì $S=\dfrac{d\ln f}{d\ln p}$, từ $R=p\,q$ và
+$P=(p-c)\,q$ ta có hai hệ thức:
+\begin{equation}\label{eq:S}
+S_R = 1 + S_q, \qquad S_P = \frac{p}{p-c} + S_q .
+\end{equation}
+Ở mô hình (E), $S_q=-k$ nên $S_R=1-k$ và $S_P=\dfrac{p}{p-c}-k$ (đều tính được ngay);
+ở mô hình (L), $S_q=-\dfrac{bp}{a-bp}$. Tại giá tối ưu $P'(p^*)=0$ nên $S_P(p^*)=0$.
+
+\subsection{Điểm tới hạn và xấp xỉ bậc hai}
+Tại $p^*$ ta có $P'(p^*)=0$, do đó $dP=0$ với mọi $\Delta p$ và $E_{\mathrm{rel}}=100\%$
+(với $\Delta P\neq 0$): vi phân dự báo ``lợi nhuận không đổi''. Tuy nhiên theo
+\eqref{eq:taylor}, thay đổi thực là
+$\Delta P\approx \tfrac12 P''(p^*)\Delta p^2<0$, tức lợi nhuận \emph{giảm} dù giá lệch về
+phía nào; thay đổi này là bậc hai theo $\Delta p$ nên nhỏ khi $\Delta p$ nhỏ, nhưng vi
+phân bậc nhất không nhìn thấy nó. Để khắc phục, giữ thêm số hạng bậc hai:
+\begin{equation}\label{eq:dy2}
+dy_2 = f'(p_0)\,\Delta p + \tfrac12 f''(p_0)\,\Delta p^2 .
+\end{equation}
+Theo công thức Taylor với phần dư bậc ba, $\Delta y - dy_2=\tfrac16 f'''(\xi)\Delta p^3$,
+nên sai số của $dy_2$ có \emph{bậc ba}. Nếu $f'''\equiv 0$ (như $R$, $P$ ở mô hình L)
+thì $dy_2$ chính xác tuyệt đối.
+
+\subsection{Vùng tin cậy của vi phân}
+Cho ngưỡng $\tau$ (ví dụ $1\%$, $5\%$, $10\%$). \emph{Vùng tin cậy} của vi phân tại $p_0$
+là các mức lệch giá lớn nhất, tính theo tỉ lệ $\Delta p/p_0$, sao cho
+$E_{\mathrm{rel}}\le\tau$ với \emph{mọi} mức lệch nhỏ hơn, tách riêng hai phía (giá tăng
+và giá giảm). Thuật toán: với mỗi phía, duyệt $\Delta p/p_0=0{,}05\%,\,0{,}10\%,\dots$ đến
+tối đa $50\%$ (bước $0{,}05\%$); dừng khi $E_{\mathrm{rel}}>\tau$ hoặc giá mới ra khỏi
+miền xác định, kết quả là giá trị cuối cùng còn thỏa. Nếu $E_{\mathrm{abs}}<10^{-9}$ thì
+coi $E_{\mathrm{rel}}=0$ (trường hợp vi phân chính xác). Do dùng lưới nên kết quả có độ
+chính xác $\pm0{,}05\%$, và giá trị $50\%$ nghĩa là chưa chạm ngưỡng trong khoảng khảo sát.
+
+Từ~\eqref{eq:erel} ta có ước lượng giải tích
+\begin{equation}\label{eq:safe}
+\frac{|\Delta p|}{p_0}\ \lesssim\ \frac{2\tau\,|f'(p_0)|}{|f''(p_0)|\,p_0},
+\end{equation}
+cho thấy vùng tin cậy tỉ lệ với $\tau$ và với tỉ số $|f'|/|f''|$; tại $p^*$ thì
+$f'=0$ nên vùng bằng $0$. Với $P$ ở (L) tại $p_0=50$, $\tau=5\%$:
+$2\cdot0{,}05\cdot500/(20\cdot50)=5\%$.
+
+\subsection{Mô phỏng Monte Carlo}
+Để xem sai số giá \emph{ngẫu nhiên} ảnh hưởng thế nào, giả sử giá thực tế là
+$p=p_0(1+\varepsilon)$ với $\varepsilon\sim N(0,\sigma^2)$, $\sigma\in\{1\%,5\%,10\%\}$, giới
+hạn $|\varepsilon|\le 50\%$ (với $\sigma\le10\%$ xác suất vượt giới hạn này chỉ cỡ $10^{-6}$).
+Mô phỏng $N=200\,000$ giá trị bằng bộ sinh số ngẫu nhiên \texttt{numpy.random.default\_rng}
+với hạt giống cố định $20260503$, tính $\Delta P$ thực cho từng giá trị rồi lấy trung bình
+và độ lệch chuẩn. Từ khai triển
+$\Delta P\approx P'(p_0)\,p_0\varepsilon+\tfrac12 P''(p_0)\,p_0^2\varepsilon^2$ ta có
+\begin{equation}\label{eq:mc}
+\mathbb E[\Delta P]\approx \tfrac12 P''(p_0)\,(p_0\sigma)^2, \qquad
+\operatorname{std}(\Delta P)\approx |P'(p_0)|\,p_0\sigma \quad (P'(p_0)\neq 0).
+\end{equation}
+Tại $p^*$ số hạng bậc nhất biến mất, $\Delta P\approx\tfrac12P''(p^*)(p^*\varepsilon)^2\le 0$:
+phân bố lệch hẳn về phía âm, trung bình vẫn là $\tfrac12P''(p^*\sigma)^2$, và vì
+$\operatorname{Var}(\varepsilon^2)=2\sigma^4$ nên
+$\operatorname{std}(\Delta P)\approx |P''(p^*)|\,(p^*\sigma)^2/\sqrt2$.
+Mô phỏng được dùng để \emph{kiểm chứng} các dự đoán~\eqref{eq:mc}, không thay thế chúng.
+
+\subsection{Tóm tắt quy trình}
+\begin{enumerate}
+  \item Xây dựng $q,R,P$ và các đạo hàm cấp một, cấp hai; kiểm chứng bằng \texttt{verify.py}.
+  \item Với từng mức lệch giá, tính $\Delta y$, $dy$, $E_{\mathrm{abs}}$, $E_{\mathrm{rel}}$.
+  \item Đo bậc của sai số bằng hồi quy log-log và so với lý thuyết (bậc $2$).
+  \item Tính độ nhạy $S$ và so sánh giữa các đại lượng, tại $p_0$ và $p^*$.
+  \item Xác định vùng tin cậy theo ngưỡng $\tau$; thêm số hạng bậc hai khi cần.
+  \item Mô phỏng Monte Carlo để kiểm chứng dự đoán cho sai số ngẫu nhiên.
+\end{enumerate}

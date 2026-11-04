@@ -47,7 +47,7 @@ Cách đọc một số kết quả:
 ├── output/
 │   ├── tables/          bảng kết quả (CSV)
 │   └── figures/         hình kết quả (PNG)
-├── report/              phần báo cáo LaTeX (muc6.tex)
+├── report/              báo cáo LaTeX: main.tex ghép muc6–8.tex; make_tables.py sinh bảng
 ├── docs/                đề bài
 ├── pyproject.toml, uv.lock
 └── README.md
@@ -81,6 +81,18 @@ streamlit run app.py
 `verify.py` kiểm chứng các đạo hàm; `experiments.py` tạo lại bảng và hình; `app.py` mở giao diện web để đổi tham số và xem kết quả.
 
 Ứng dụng có 8 tab: xấp xỉ vi phân, bảng sai số (TN1), bậc của sai số (TN3), độ nhạy (TN4), Monte Carlo (TN6), vùng tin cậy (TN7), xấp xỉ bậc hai (TN8) và kết quả đã xuất. Tham số mô hình, giá `p₀` và mức sai số giá chỉnh ở thanh bên.
+
+## Báo cáo (LaTeX)
+
+`report/main.tex` ghép các mục `muc3.tex` … `muc11.tex` (mục nào chưa có thì bỏ qua). Hiện có Mục 6–8. Các bảng trong Mục 8 được sinh từ `output/tables/*.csv` nên luôn khớp với mã nguồn:
+
+```bash
+uv run experiments.py            # tạo output/ (nếu chưa có)
+uv run report/make_tables.py     # sinh report/generated/*.tex
+cd report && latexmk -xelatex main.tex
+```
+
+Cần XeLaTeX (TeX Live hoặc MiKTeX). Phông chính là Times New Roman nếu máy có, nếu không dùng TeX Gyre Termes.
 
 ## Tái lập kết quả
 

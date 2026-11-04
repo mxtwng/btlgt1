@@ -1,0 +1,105 @@
+% ============================================================
+% Báo cáo Bài tập lớn Giải tích 1 - Đề tài 9
+% Biên dịch (trong thư mục report/):   latexmk -xelatex main.tex
+% Cần XeLaTeX (hỗ trợ tiếng Việt Unicode). Bảng tự sinh: uv run make_tables.py
+%
+% Cách ghép báo cáo: mỗi mục là một tệp nhỏ muc3.tex ... muc11.tex.
+% Tệp nào chưa có thì bị bỏ qua, nên cả nhóm có thể làm song song rồi thả
+% tệp của mình vào thư mục này. Đánh số mục tự động theo thứ tự ghép.
+% ============================================================
+\documentclass[12pt,a4paper]{article}
+\usepackage{fix-cm}   % cho phép cỡ chữ 13pt với phông toán
+
+% ---- Phông chữ: Times New Roman nếu có, không thì TeX Gyre Termes (giống Times)
+\usepackage{fontspec}
+\IfFontExistsTF{Times New Roman}{\setmainfont{Times New Roman}}{%
+  \IfFontExistsTF{TeX Gyre Termes}{\setmainfont{TeX Gyre Termes}}{%
+    \setmainfont{Latin Modern Roman}}}
+
+% ---- Yêu cầu hình thức của đề: chữ 13pt, giãn dòng 1,5,
+%      lề trên/dưới 2,5 cm, trái 3,5 cm, phải 2 cm.
+\usepackage[a4paper,top=2.5cm,bottom=2.5cm,left=3.5cm,right=2cm]{geometry}
+\renewcommand{\normalsize}{\fontsize{13}{15.6}\selectfont}
+\renewcommand{\small}{\fontsize{11.5}{13.8}\selectfont}
+\renewcommand{\footnotesize}{\fontsize{10.5}{12.6}\selectfont}
+\linespread{1.25}   % tương đương giãn dòng 1,5 của Word
+\setlength{\parindent}{1cm}
+\setlength{\parskip}{2pt}
+\emergencystretch=3em
+
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs,array}
+\usepackage{graphicx}
+\usepackage{caption}
+\usepackage{enumitem}
+\usepackage{etoolbox}
+% mọi bảng: chữ nhỏ, giãn dòng đơn (đỡ tràn lề)
+\AtBeginEnvironment{table}{\linespread{1}\small\selectfont\setlength{\tabcolsep}{5pt}}
+\setlist{itemsep=1pt,topsep=3pt}
+\graphicspath{{../output/figures/}}
+\captionsetup{font=small,labelfont=bf,labelsep=period,skip=4pt}
+
+% Bảng/hình: dùng cỡ chữ nhỏ và giãn dòng đơn trong bảng
+\newcommand{\tbsty}{\centering\linespread{1}\small\selectfont\setlength{\tabcolsep}{8pt}}
+\renewcommand{\arraystretch}{1.12}
+
+% ---- Tên tiếng Việt
+\renewcommand{\contentsname}{Mục lục}
+\renewcommand{\figurename}{Hình}
+\renewcommand{\tablename}{Bảng}
+\renewcommand{\refname}{Tài liệu tham khảo}
+
+% ---- Thông tin trang bìa: điền vào đây
+\newcommand{\truong}{TRƯỜNG ...............................}
+\newcommand{\khoa}{KHOA ...............................}
+\newcommand{\tendetai}{ĐỘ NHẠY VÀ SAI SỐ TRONG MÔ HÌNH KINH TẾ}
+\newcommand{\nhom}{Nhóm: ....\\ Thành viên: ..............................}
+\newcommand{\gvhd}{Giảng viên hướng dẫn: ..............................}
+\newcommand{\hocky}{Học kỳ: ......\quad Năm học: ......}
+
+% Chèn một mục nếu tệp tồn tại
+\newcommand{\optinput}[1]{\IfFileExists{#1.tex}{\input{#1}}{}}
+
+\usepackage[hidelinks]{hyperref}
+
+\begin{document}
+\normalsize
+
+% ---------------------------------------------------------------- Trang bìa
+\begin{titlepage}
+  \centering\linespread{1.15}\selectfont
+  {\large\bfseries \truong\\ \khoa\par}
+  \vspace{3cm}
+  {\Large\bfseries BÀI TẬP LỚN\\ GIẢI TÍCH 1\par}
+  \vspace{1.5cm}
+  {\large Đề tài 9\par}
+  {\LARGE\bfseries \tendetai\par}
+  \vfill
+  \begin{flushleft}\hspace{3cm}\begin{minipage}{10cm}
+    \nhom\\[4pt] \gvhd
+  \end{minipage}\end{flushleft}
+  \vspace{1cm}
+  \hocky
+\end{titlepage}
+
+\tableofcontents
+\clearpage
+
+% ---------------------------------------------------------------- Nội dung
+% Thứ tự theo hướng dẫn của đề: 3 Giới thiệu, 4 Phát biểu bài toán,
+% 5 Cơ sở Giải tích, 6 Mô hình, 7 Phương pháp, 8 Tính toán/thực nghiệm,
+% 9 Kết quả và phân tích, 10 Kết luận, 11 Tài liệu tham khảo.
+% Đánh số mục: mặc định đánh theo thứ tự ghép (mục đầu tiên là 1). Muốn số mục
+% khớp danh sách của đề (Giới thiệu = Mục 3, Mô hình = Mục 6, ...), bỏ dấu % ở dòng sau:
+% \setcounter{section}{2}
+\optinput{muc3}
+\optinput{muc4}
+\optinput{muc5}
+\input{muc6}
+\input{muc7}
+\input{muc8}
+\optinput{muc9}
+\optinput{muc10}
+\optinput{muc11}
+
+\end{document}
