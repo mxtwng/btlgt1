@@ -1,7 +1,25 @@
 """
-experiments.py - Tinh toan / mo phong / thuc nghiem (Muc 8 cua bao cao)
-Chay:  python experiments.py
-Ket qua: output/tables/*.csv  va  output/figures/*.png
+experiments.py - Tính toán / mô phỏng / thực nghiệm (Mục 8 của báo cáo, Đề tài 9)
+
+Chạy:  uv run experiments.py     (hoặc: python experiments.py)
+
+Kết quả: output/tables/*.csv  và  output/figures/*.png
+(chạy lại sẽ ghi đè các tệp cùng tên).
+
+Tám thí nghiệm, mỗi thí nghiệm trả lời một câu hỏi của đề tài:
+
+    TN1  Vi phân dy dự báo thay đổi thực Δy tốt đến đâu?        (bảng sai số)
+    TN2  Xấp xỉ tuyến tính trông như thế nào trên đồ thị?       (tiếp tuyến)
+    TN3  Sai số |Δy - dy| giảm theo Δp với bậc bao nhiêu?       (log-log)
+    TN4  Đại lượng nào nhạy nhất với giá?                       (độ nhạy S)
+    TN5  Kết luận có đổi khi đổi tham số mô hình không?         (quét b, k)
+    TN6  Khi giá nhiễu ngẫu nhiên thì ΔP phân bố ra sao?        (Monte Carlo)
+    TN7  Vi phân dùng được đến mức Δp nào?                      (vùng tin cậy)
+    TN8  Thêm số hạng bậc hai thì cải thiện bao nhiêu?          (xấp xỉ bậc 2)
+
+Ký hiệu: p = giá (nghìn đồng/sp), q = lượng cầu, R = doanh thu, P = lợi nhuận,
+p0 = giá hiện tại, p* = giá tối ưu (P'(p*) = 0).
+Tất cả phép tính đều lấy từ src/ nên khớp với app.py.
 """
 from pathlib import Path
 
@@ -32,17 +50,28 @@ plt.rcParams.update({"figure.dpi": 130, "axes.grid": True, "grid.alpha": .3,
 
 
 def save(fig, name):
+    """Lưu hình vào output/figures/<name> rồi đóng hình."""
     fig.tight_layout()
     fig.savefig(FIG / name)
     plt.close(fig)
 
 
 def to_csv(df, name):
+    """Ghi bảng vào output/tables/<name> (UTF-8 có BOM để Excel đọc đúng tiếng Việt)."""
     df.to_csv(TAB / name, index=False, encoding="utf-8-sig", float_format="%.6g")
 
 
 # ------------------------------------------------ TN1: bang sai so
 def exp1_tables(models):
+    """TN1 - Bảng so sánh thay đổi thực Δy và vi phân dy.
+
+    Với mỗi mô hình và mỗi đại lượng (q, R, P), thay giá p0 một lượng
+    Δp/p0 ∈ DEFAULT_PCTS (±1% ... ±20%) rồi tính Δy thực, dy = f'(p0)Δp,
+    sai số tuyệt đối/tương đối và cận Taylor (M/2)Δp². Với P còn khảo sát
+    thêm tại p* (nơi P' = 0 nên dy = 0).
+
+    Ghi: output/tables/TN1_<mô hình>_<q|R|P>_<p0|popt>.csv
+    """
     print("\n=== TN1: Δy thực vs dy ===")
     for m in models.values():
         for out in OUTS:
@@ -63,6 +92,13 @@ def exp1_tables(models):
 
 # ------------------------------------------------ TN2: tiep tuyen
 def exp2_tangent(models):
+    """TN2 - Minh họa hình học: vi phân chính là tiếp tuyến.
+
+    Vẽ q(p), R(p), P(p) cùng tiếp tuyến tại p0 và dải p0 ± 20%. Khoảng cách
+    giữa đường cong và tiếp tuyến chính là sai số của xấp xỉ vi phân.
+
+    Ghi: output/figures/TN2_tangent_<linear|elastic>.png
+    """
     for m in models.values():
         lo, hi = PLOT_RANGE[m.key]
         ps = np.linspace(lo, hi, 400)
@@ -87,6 +123,15 @@ def exp2_tangent(models):
 
 # ------------------------------------------------ TN3: bac hoi tu
 def exp3_order(models):
+    """TN3 - Bậc của sai số xấp xỉ vi phân (kỳ vọng ≈ 2).
+
+    Vẽ |Δy - dy| theo |Δp| trên thang log-log với Δp/p0 từ 1e-4 đến 30%.
+    Hệ số góc hồi quy log-log là bậc của sai số: ≈ 2 nghĩa là giảm Δp 10 lần
+    thì sai số giảm ~100 lần (do sai số ≈ ½f''Δp²). Bỏ qua trường hợp sai số
+    bằng 0 (q tuyến tính, f'' = 0).
+
+    Ghi: output/tables/TN3_convergence_order.csv, output/figures/TN3_error_loglog.png
+    """
     print("\n=== TN3: bậc của sai số (kỳ vọng ≈ 2) ===")
     grid = np.logspace(-4, np.log10(.3), 40)
     rows = []
@@ -113,6 +158,14 @@ def exp3_order(models):
 
 # ------------------------------------------------ TN4: do nhay
 def exp4_elasticity(models):
+    """TN4 - Độ nhạy tương đối S(p) = f'(p)·p / f(p).
+
+    Giá tăng 1% thì đại lượng đầu ra đổi xấp xỉ S%. Vẽ S_q, S_R, S_P theo p
+    (cắt ở |S| > 12 cho dễ nhìn) và lập bảng giá trị tại p0 và p*. Tại p* thì
+    S_P = 0 vì P' = 0.
+
+    Ghi: output/figures/TN4_elasticity.png, output/tables/TN4_elasticity_values.csv
+    """
     fig, axes = plt.subplots(1, len(models), figsize=(11, 4))
     for ax, m in zip(np.atleast_1d(axes), models.values()):
         lo, hi = PLOT_RANGE[m.key]
@@ -141,6 +194,15 @@ def exp4_elasticity(models):
 
 # ------------------------------------------------ TN5: tham so
 def exp5_params():
+    """TN5 - Ảnh hưởng của tham số mô hình (cố định Δp = +10%).
+
+    Quét độ dốc cầu b (mô hình tuyến tính, b = 5..20) và độ co giãn k (mô hình
+    co giãn, k = 1.2..4), mỗi giá trị tính sai số tương đối của xấp xỉ vi phân
+    cho q, R, P. Trả lời: kết luận về độ chính xác của vi phân có phụ thuộc
+    vào bộ tham số cụ thể hay không.
+
+    Ghi: output/tables/TN5_param_study.csv, output/figures/TN5_param_study.png
+    """
     print("\n=== TN5: ảnh hưởng tham số (Δp = +10%) ===")
     sweeps = [("linear", "b", np.linspace(5, 20, 7),
                lambda v: linear_demand(b=v)),
@@ -172,6 +234,15 @@ def exp5_params():
 
 # ------------------------------------------------ TN6: Monte Carlo
 def exp6_montecarlo(models, n=DEFAULT_N):
+    """TN6 - Mô phỏng Monte Carlo với giá nhiễu p = p0(1 + ε), ε ~ N(0, σ²).
+
+    Với σ ∈ {1%, 5%, 10%}, mô phỏng n mẫu (seed cố định để tái lập) và so sánh
+    độ lệch chuẩn và trung bình của ΔP thực với dự đoán từ khai triển Taylor:
+    std ≈ |P'|·p0·σ, mean ≈ ½P''(p0σ)². Tại p* thì P' = 0 nên std dự đoán bậc
+    một bằng 0, còn phân bố ΔP lệch về phía âm (P'' < 0).
+
+    Ghi: output/tables/TN6_montecarlo.csv, output/figures/TN6_montecarlo_hist.png
+    """
     print("\n=== TN6: Monte Carlo (nhiễu giá ε~N(0,σ²)) ===")
     rows = []
     fig, axes = plt.subplots(1, 2, figsize=(11, 4))
@@ -202,6 +273,17 @@ def exp6_montecarlo(models, n=DEFAULT_N):
 
 # ------------------------------------------------ TN7: vung tin cay
 def exp7_safe_range(models):
+    """TN7 - Vùng tin cậy của vi phân: Δp tối đa để sai số tương đối ≤ ngưỡng.
+
+    Với ngưỡng E_rel ∈ {1%, 5%, 10%}, tìm mức tăng/giảm giá lớn nhất (tính theo
+    % của p0) sao cho E_rel ≤ ngưỡng với MỌI mức nhỏ hơn (src.sensitivity.
+    safe_range, quét lưới bước 0.05%, tối đa 50%). Cách đọc kết quả:
+      - 50% nghĩa là không chạm ngưỡng (q tuyến tính: vi phân chính xác tuyệt đối);
+      - 0% tại p* vì dy = 0 nên E_rel = 100% với mọi Δp ≠ 0.
+    Hình vẽ E_rel theo Δp/p0 ∈ [-30%, 30%] tại p0 cho q, R, P (đường ngưỡng 5%).
+
+    Ghi: output/tables/TN7_safe_range.csv, output/figures/TN7_erel_vs_delta.png
+    """
     print("\n=== TN7: vùng tin cậy của vi phân (E_rel <= ngưỡng) ===")
     rows = []
     for m in models.values():
@@ -247,6 +329,18 @@ def exp7_safe_range(models):
 
 # ------------------------------------------------ TN8: xap xi bac hai
 def exp8_second_order(models):
+    """TN8 - Xấp xỉ bậc hai dy2 = f'(p0)Δp + ½f''(p0)Δp² so với vi phân bậc một.
+
+    Phần 1 (bảng): với lợi nhuận P tại p0 và p*, Δp/p0 ∈ {±5%, ±10%, ±20%},
+    so sánh Δy thực với dy bậc 1 và bậc 2, kèm sai số tuyệt đối/tương đối.
+    Tại p* xấp xỉ bậc 1 cho dy = 0 (sai 100%) còn bậc 2 bắt được thay đổi.
+    Phần 2 (log-log): bậc hội tụ của hai xấp xỉ, kỳ vọng ≈ 2 (bậc 1) và ≈ 3
+    (bậc 2). Mô hình tuyến tính có R, P là đa thức bậc hai nên xấp xỉ bậc 2
+    chính xác tuyệt đối (sai số 0, hệ số góc để trống/NaN).
+
+    Ghi: output/tables/TN8_second_order.csv, output/tables/TN8_orders.csv,
+         output/figures/TN8_second_order_loglog.png
+    """
     print("\n=== TN8: xấp xỉ bậc hai dy2 = f'Δp + ½f''Δp² ===")
     pcts = [-20, -10, -5, 5, 10, 20]
     rows = []
