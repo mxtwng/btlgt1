@@ -80,6 +80,8 @@ streamlit run app.py
 
 `verify.py` kiểm chứng các đạo hàm; `experiments.py` tạo lại bảng và hình; `app.py` mở giao diện web để đổi tham số và xem kết quả.
 
+Ứng dụng có 8 tab: xấp xỉ vi phân, bảng sai số (TN1), bậc của sai số (TN3), độ nhạy (TN4), Monte Carlo (TN6), vùng tin cậy (TN7), xấp xỉ bậc hai (TN8) và kết quả đã xuất. Tham số mô hình, giá `p₀` và mức sai số giá chỉnh ở thanh bên.
+
 ## Tái lập kết quả
 
 Tham số mặc định và seed mô phỏng (`20260503`, 200 000 mẫu) nằm trong `src/`. Khi cập nhật số liệu trong báo cáo, hãy chạy lại `experiments.py` và dùng cùng tham số và seed với phần phân tích. `app.py` dùng chung code với báo cáo nên số liệu khớp nhau khi cùng tham số.

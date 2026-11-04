@@ -1,10 +1,13 @@
 """
-app.py - Ung dung trinh dien cho De tai 9 (Do nhay va sai so trong mo hinh kinh te)
+app.py - Ứng dụng trình diễn cho Đề tài 9 (Độ nhạy và sai số trong mô hình kinh tế)
 
-Chay:  uv run streamlit run app.py
+Chạy:  uv run streamlit run app.py
 
-App dung CHUNG code voi bao cao (src/model.py, src/sensitivity.py, src/montecarlo.py)
-nen so lieu trong app va trong output/ khop nhau khi cung tham so.
+App dùng CHUNG code với báo cáo (src/model.py, src/sensitivity.py, src/montecarlo.py)
+nên số liệu trong app và trong output/ khớp nhau khi cùng tham số.
+
+Các tab: xấp xỉ vi phân, bảng sai số (TN1), bậc của sai số (TN3), độ nhạy (TN4),
+Monte Carlo (TN6), vùng tin cậy (TN7), xấp xỉ bậc hai (TN8), kết quả đã xuất.
 """
 from pathlib import Path
 
@@ -17,7 +20,8 @@ import streamlit as st
 
 from src.model import linear_demand, elastic_demand
 from src.sensitivity import (DEFAULT_PCTS, differential, elasticity, error_table,
-                             exact_change, taylor_bound, convergence_order)
+                             exact_change, taylor_bound, convergence_order,
+                             second_order, safe_range)
 from src.montecarlo import simulate, DEFAULT_SEED
 
 ROOT = Path(__file__).parent
@@ -101,7 +105,8 @@ st.caption(f"{m.title}  ·  c = {c:g}  ·  p* = {m.p_opt:.4g}  ·  "
            "p tính bằng nghìn đồng/sp; q: sp/tuần; R, P: nghìn đồng/tuần")
 
 tabs = st.tabs(["Xấp xỉ vi phân", "Bảng sai số", "Bậc của sai số",
-                "Độ nhạy S(p)", "Monte Carlo", "Kết quả báo cáo"])
+                "Độ nhạy S(p)", "Monte Carlo", "Vùng tin cậy",
+                "Xấp xỉ bậc hai", "Kết quả báo cáo"])
 
 # ---------------------------------------------------- tab 1
 with tabs[0]:
@@ -226,8 +231,108 @@ with tabs[4]:
             st.pyplot(fig)
             plt.close(fig)
 
-# ---------------------------------------------------- tab 6
+# ---------------------------------------------------- tab 6 (TN7)
 with tabs[5]:
+    st.subheader("Vùng tin cậy của vi phân")
+    st.caption("Mức tăng/giảm giá lớn nhất (theo % của p₀) sao cho sai số tương đối "
+               "E_rel = |Δy − dy| / |Δy| không vượt ngưỡng với mọi mức nhỏ hơn.")
+    tol = st.slider("Ngưỡng sai số tương đối E_rel (%)", 1.0, 20.0, 5.0, 0.5) / 100
+    up, dn = safe_range(fn, p0, tol, m.domain)
+    u1, u2 = st.columns(2)
+    u1.metric("Giá tăng tối đa", f"+{100 * up:.2f}%")
+    u2.metric("Giá giảm tối đa", f"−{100 * dn:.2f}%")
+    if up >= 0.4995 and dn >= 0.4995:
+        st.info("Không chạm ngưỡng trong khoảng ±50% (quét tối đa 50%): vi phân chính "
+                "xác tuyệt đối ở đây, ví dụ q tuyến tính với f″ = 0.")
+    elif up == 0 and dn == 0:
+        st.warning("Vùng tin cậy bằng 0: tại điểm tới hạn (f′ = 0) vi phân dự báo "
+                   "dy = 0 nên E_rel = 100% với mọi Δp ≠ 0. Xem tab xấp xỉ bậc hai.")
+    else:
+        st.markdown(f"Với {fn.name.lower()} tại p₀ = {p0:.4g}, vi phân sai không quá "
+                    f"{100 * tol:g}% khi giá tăng tới **{100 * up:.2f}%** hoặc giảm "
+                    f"tới **{100 * dn:.2f}%**. Ngoài vùng này nên dùng giá trị thực "
+                    "hoặc xấp xỉ bậc hai.")
+
+    deltas = np.linspace(-.30, .30, 1201)
+    deltas = deltas[deltas != 0]
+    xs = p0 * (1 + deltas)
+    in_dom = (xs > lo) & (xs < hi)
+    dt = np.where(in_dom, fn.f(np.where(in_dom, xs, p0)) - fn.f(p0), np.nan)
+    err = np.abs(dt - float(fn.df(p0)) * (xs - p0))
+    with np.errstate(divide="ignore", invalid="ignore"):
+        erel_curve = np.where(dt != 0, 100 * err / np.abs(dt), np.nan)
+    fig, ax = plt.subplots(figsize=(9, 4.2))
+    ax.plot(100 * deltas, np.clip(erel_curve, 0, 100), label=f"E_rel của {out}")
+    ax.axhline(100 * tol, c="k", ls=":", label=f"ngưỡng {100 * tol:g}%")
+    if up > 0 or dn > 0:
+        ax.axvspan(-100 * dn, 100 * up, color="green", alpha=.12, label="vùng tin cậy")
+    ax.set_ylim(0, 100)
+    ax.set_xlabel("Δp/p₀ (%)"); ax.set_ylabel("sai số tương đối E_rel (%)")
+    ax.legend(fontsize=8)
+    st.pyplot(fig)
+    plt.close(fig)
+
+# ---------------------------------------------------- tab 7 (TN8)
+with tabs[6]:
+    st.subheader("Xấp xỉ bậc hai: dy₂ = f′(p₀)Δp + ½f″(p₀)Δp²")
+    dy2 = second_order(fn, p0, dx)
+    e2 = abs(dy_true - dy2)
+    e2_rel = e2 / abs(dy_true) if dy_true != 0 else float("nan")
+    v1, v2, v3, v4, v5 = st.columns(5)
+    v1.metric("Δy thực", f"{dy_true:+.5g}")
+    v2.metric("dy bậc 1", f"{dy_diff:+.5g}")
+    v3.metric("dy₂ bậc 2", f"{dy2:+.5g}")
+    v4.metric("E_rel bậc 1", fmt_pct(100 * e_rel))
+    v5.metric("E_rel bậc 2", fmt_pct(100 * e2_rel))
+    if e2 <= 1e-9 * max(1.0, abs(dy_true)):
+        st.info("Xấp xỉ bậc hai chính xác tuyệt đối: hàm này là đa thức bậc ≤ 2 "
+                "(ví dụ R và P của cầu tuyến tính).")
+    elif np.isfinite(e_rel) and np.isfinite(e2_rel):
+        st.markdown(f"Thêm số hạng bậc hai đưa sai số tương đối từ "
+                    f"**{100 * e_rel:.2f}%** xuống **{100 * e2_rel:.2f}%**.")
+    elif dy_diff == 0:
+        st.markdown("Vi phân bậc 1 cho dy = 0 (điểm tới hạn), còn số hạng bậc hai "
+                    "bắt được thay đổi thực.")
+
+    ps3 = np.linspace(*plot_range(), 400)
+    fig, ax = plt.subplots(figsize=(9, 4.4))
+    ax.plot(ps3, fn.f(ps3), lw=2, label=f"{out}(p)")
+    ax.plot(ps3, y0 + float(fn.df(p0)) * (ps3 - p0), "--", label="bậc 1 (tiếp tuyến)")
+    ax.plot(ps3, y0 + float(fn.df(p0)) * (ps3 - p0)
+            + 0.5 * float(fn.d2f(p0)) * (ps3 - p0) ** 2, "-.", label="bậc 2 (parabol)")
+    ax.scatter([p0], [y0], c="k", zorder=5, label="p₀")
+    ax.scatter([x1], [y0 + dy_true], c="red", zorder=5, label="giá trị thực")
+    ax.set_xlabel("giá p (nghìn đồng/sp)")
+    ax.set_ylabel(f"{fn.name} ({fn.unit_y})")
+    ax.legend(fontsize=8)
+    st.pyplot(fig)
+    plt.close(fig)
+
+    st.markdown("**Bậc hội tụ** (hệ số góc log-log của sai số theo |Δp|)")
+    grid2 = np.logspace(-4, np.log10(.3), 40)
+    s1, dxs1, er1 = convergence_order(fn, p0, grid2)
+    s2, dxs2, er2 = convergence_order(fn, p0, grid2, approx=second_order)
+    h1, h2 = st.columns(2)
+    h1.metric("Bậc 1 (kỳ vọng ≈ 2)", "—" if not np.isfinite(s1) else f"{s1:.3f}")
+    h2.metric("Bậc 2 (kỳ vọng ≈ 3)", "—" if not np.isfinite(s2) else f"{s2:.3f}")
+    if not np.isfinite(s1) and not np.isfinite(s2):
+        st.info("Cả hai xấp xỉ đều chính xác tuyệt đối (f″ = 0).")
+    else:
+        fig, ax = plt.subplots(figsize=(7, 4.2))
+        if np.isfinite(s1):
+            ax.loglog(dxs1, er1, "o-", ms=3, label=f"bậc 1 (slope = {s1:.2f})")
+        if np.isfinite(s2):
+            ax.loglog(dxs2, er2, "s--", ms=3, label=f"bậc 2 (slope = {s2:.2f})")
+        else:
+            st.caption("Xấp xỉ bậc hai có sai số bằng 0, nên không có đường bậc 2 "
+                       "trên đồ thị.")
+        ax.axvline(abs(dx), c="red", alpha=.5, ls="--", label="Δp hiện tại")
+        ax.set_xlabel("|Δp|"); ax.set_ylabel("|Δy − xấp xỉ|"); ax.legend(fontsize=8)
+        st.pyplot(fig)
+        plt.close(fig)
+
+# ---------------------------------------------------- tab 8
+with tabs[7]:
     st.subheader("Kết quả đã xuất bởi experiments.py")
     st.caption("Các tệp này dùng tham số mặc định của báo cáo "
                "(a=1200, b=10, A=10⁶, k=2, c=30), không đổi theo thanh bên.")
