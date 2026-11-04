@@ -1,0 +1,13 @@
+﻿mô hình,đại lượng,điểm,p,S
+linear,q,p0,50,-0.714286
+linear,q,p*,75,-1.66667
+linear,R,p0,50,0.285714
+linear,R,p*,75,-0.666667
+linear,P,p0,50,1.78571
+linear,P,p*,75,0
+elastic,q,p0,40,-2
+elastic,q,p*,60,-2
+elastic,R,p0,40,-1
+elastic,R,p*,60,-1
+elastic,P,p0,40,2
+elastic,P,p*,60,0

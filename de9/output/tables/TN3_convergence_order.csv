@@ -1,0 +1,9 @@
+﻿mô hình,đại lượng,điểm,hệ số góc log-log
+linear,q,p0,
+linear,R,p0,2
+linear,P,p0,2
+linear,P,p*,2
+elastic,q,p0,1.97308
+elastic,R,p0,1.97953
+elastic,P,p0,1.96767
+elastic,P,p*,1.95906

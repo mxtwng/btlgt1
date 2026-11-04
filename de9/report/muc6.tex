@@ -1,0 +1,122 @@
+% ============================================================
+% Mục 6. Mô hình toán học  (Đề tài 9)
+% Đây là đoạn nội dung (không có preamble): dùng \input{muc6} hoặc dán vào báo cáo.
+% Cần: amsmath, booktabs. Số liệu khớp với src/model.py.
+% ============================================================
+\section{Mô hình toán học}
+
+\subsection{Bối cảnh và đại lượng khảo sát}
+Xét một doanh nghiệp bán một loại sản phẩm với giá bán $p$. Giá bán là đại lượng
+doanh nghiệp \emph{dự kiến} khi lập kế hoạch, nhưng giá thực tế thu được thường lệch
+so với dự kiến (do chiết khấu, khuyến mãi, làm tròn giá, hoặc biến động thị trường).
+Bài toán đặt ra: \emph{sai số nhỏ của giá làm doanh thu và lợi nhuận thay đổi bao
+nhiêu, và có thể dự báo nhanh sự thay đổi đó bằng vi phân đến mức độ chính xác nào?}
+
+Các đại lượng của mô hình được cho trong Bảng~\ref{tab:var}.
+
+\begin{table}[h]
+\centering
+\caption{Các đại lượng trong mô hình và đơn vị.}\label{tab:var}
+\begin{tabular}{@{}clll@{}}
+\toprule
+Ký hiệu & Ý nghĩa & Đơn vị & Vai trò \\
+\midrule
+$p$ & giá bán & nghìn đồng/sản phẩm & biến đầu vào \\
+$q(p)$ & lượng cầu (số sản phẩm bán được) & sản phẩm/tuần & đầu ra \\
+$R(p)$ & doanh thu & nghìn đồng/tuần & đầu ra \\
+$P(p)$ & lợi nhuận & nghìn đồng/tuần & đầu ra \\
+$c$ & chi phí biên (giá vốn) mỗi sản phẩm & nghìn đồng/sản phẩm & tham số \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Doanh thu và lợi nhuận được xác định từ lượng cầu:
+\begin{equation}
+R(p) = p\,q(p), \qquad P(p) = R(p) - c\,q(p) = (p-c)\,q(p).
+\end{equation}
+Trong đó $c$ được giả thiết không đổi và không phụ thuộc sản lượng.
+
+\subsection{Hai mô hình cầu}
+Để xem kết luận phụ thuộc thế nào vào dạng hàm cầu, nhóm khảo sát hai mô hình với
+tính chất khác nhau.
+
+\paragraph{Mô hình (L): cầu tuyến tính.}
+\begin{equation}
+q(p) = a - b\,p, \qquad 0 < p < \frac{a}{b},
+\end{equation}
+với $a>0$ là lượng cầu tối đa khi giá tiến về $0$ và $b>0$ là số sản phẩm cầu giảm đi
+khi giá tăng thêm $1$ nghìn đồng. Điều kiện $p<a/b$ bảo đảm $q>0$. Khi đó
+\begin{align}
+R(p) &= ap - bp^2, \\
+P(p) &= (p-c)(a-bp) = -bp^2 + (a+bc)\,p - ac.
+\end{align}
+
+\paragraph{Mô hình (E): cầu co giãn không đổi.}
+\begin{equation}
+q(p) = A\,p^{-k}, \qquad p>0,\ k>1,
+\end{equation}
+với $A>0$ là hằng số quy mô và $k$ là độ co giãn của cầu theo giá (giá tăng $1\%$ thì
+cầu giảm khoảng $k\%$). Điều kiện $k>1$ bảo đảm lợi nhuận có giá tối ưu hữu hạn. Khi đó
+\begin{align}
+R(p) &= A\,p^{1-k}, \\
+P(p) &= A\,p^{1-k} - cA\,p^{-k}.
+\end{align}
+
+\subsection{Giá tối ưu}
+Giá tối ưu $p^*$ là điểm làm lợi nhuận lớn nhất, thỏa $P'(p^*)=0$ (cách tính ở Mục~7):
+\begin{equation}
+\text{(L)}\quad p^* = \frac{a+bc}{2b}, \qquad\qquad
+\text{(E)}\quad p^* = \frac{ck}{k-1}.
+\end{equation}
+Điểm $p^*$ có vai trò đặc biệt trong bài toán độ nhạy: tại đó đạo hàm bậc nhất của $P$
+bằng $0$, nên vi phân bậc nhất không còn phản ánh đúng sự thay đổi của lợi nhuận
+(xem Mục~8).
+
+\subsection{Bộ tham số của ví dụ}
+Nhóm sử dụng bộ tham số giả định, do nhóm tự xây dựng (không lấy từ giáo trình), với
+chi phí biên $c=30$ nghìn đồng/sản phẩm:
+
+\begin{table}[h]
+\centering
+\caption{Tham số và điểm khảo sát.}\label{tab:par}
+\begin{tabular}{@{}lccccc@{}}
+\toprule
+Mô hình & Tham số & Giá hiện tại $p_0$ & $q(p_0)$ & $R(p_0)$ & $P(p_0)$ \\
+\midrule
+(L) & $a=1200,\ b=10$ & $50$ & $700$ & $35\,000$ & $14\,000$ \\
+(E) & $A=10^6,\ k=2$ & $40$ & $625$ & $25\,000$ & $6\,250$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Giá tối ưu tương ứng là $p^*=75$ (mô hình L, $P(p^*)=20\,250$) và $p^*=60$ (mô hình E,
+$P(p^*)\approx 8\,333{,}3$), đơn vị lợi nhuận là nghìn đồng/tuần. Hai bộ số cho hai
+tình huống khác nhau: ở (L) giá hiện tại thấp hơn giá tối ưu và cầu giảm đều theo giá,
+ở (E) cầu giảm rất nhanh khi giá thấp và chậm dần khi giá cao.
+
+\subsection{Sai số đầu vào và câu hỏi nghiên cứu}
+Giả sử giá thực tế là $p_0+\Delta p$ thay vì $p_0$. Sai số tương đối của đầu vào là
+$\Delta p/p_0$ (ví dụ $\pm 1\%,\ \pm 5\%,\ \pm 20\%$). Với mỗi đại lượng đầu ra
+$y=f(p)\in\{q,R,P\}$, thay đổi \emph{thực} là
+\begin{equation}
+\Delta y = f(p_0+\Delta p) - f(p_0).
+\end{equation}
+Nhóm trả lời bốn câu hỏi, tương ứng các yêu cầu của đề tài:
+\begin{enumerate}
+  \item Độ nhạy của $q$, $R$, $P$ theo giá tại $p_0$ lớn hay nhỏ, và đại lượng nào nhạy nhất?
+  \item Vi phân $dy=f'(p_0)\Delta p$ dự báo $\Delta y$ chính xác đến mức nào khi
+        $|\Delta p/p_0|$ tăng từ $1\%$ lên $20\%$?
+  \item Sai số của xấp xỉ $|\Delta y - dy|$ phụ thuộc vào $\Delta p$ ra sao?
+  \item Khi giá hiện tại ở gần giá tối ưu, kết luận thay đổi thế nào?
+\end{enumerate}
+
+\subsection{Giả thiết và hạn chế của mô hình}
+\begin{itemize}
+  \item Chỉ giá $p$ bị sai số; các tham số $a,b,A,k,c$ được coi là chính xác.
+  \item Lượng cầu phản ứng tức thời và tất định theo giá; không xét yếu tố mùa vụ,
+        đối thủ cạnh tranh hay giới hạn sản xuất.
+  \item Chi phí biên $c$ không đổi.
+  \item Bộ tham số là giả định minh họa, không được ước lượng từ dữ liệu thị trường.
+        Kết luận về \emph{phương pháp} (cách sai số lan truyền) có tính tổng quát,
+        còn các con số cụ thể chỉ có ý nghĩa với bộ tham số này.
+\end{itemize}
