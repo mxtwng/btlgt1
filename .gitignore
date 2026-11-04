@@ -27,3 +27,7 @@ __pycache__/
 *.out
 *.synctex.gz
 *.toc
+
+# LaTeX build output
+*.xdv
+report/main.pdf
