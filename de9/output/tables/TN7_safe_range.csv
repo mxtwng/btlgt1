@@ -1,0 +1,25 @@
+﻿mô hình,đại lượng,điểm,ngưỡng E_rel (%),Δp tăng tối đa (%),Δp giảm tối đa (%)
+linear,q,p0,1,50,50
+linear,q,p0,5,50,50
+linear,q,p0,10,50,50
+linear,R,p0,1,0.35,0.4
+linear,R,p0,5,1.9,2.1
+linear,R,p0,10,3.6,4.4
+linear,P,p0,1,0.95,1
+linear,P,p0,5,4.75,5.25
+linear,P,p0,10,9.05,11.1
+linear,P,p*,1,0,0
+linear,P,p*,5,0,0
+linear,P,p*,10,0,0
+elastic,q,p0,1,0.65,0.65
+elastic,q,p0,5,3.3,3.35
+elastic,q,p0,10,6.55,6.7
+elastic,R,p0,1,0.95,1
+elastic,R,p0,5,5,5
+elastic,R,p0,10,9.95,10
+elastic,P,p0,1,0.35,0.4
+elastic,P,p0,5,1.95,2
+elastic,P,p0,10,3.85,4.15
+elastic,P,p*,1,0,0
+elastic,P,p*,5,0,0
+elastic,P,p*,10,0,0

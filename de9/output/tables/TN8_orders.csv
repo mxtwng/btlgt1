@@ -1,0 +1,7 @@
+﻿mô hình,đại lượng,điểm,hệ số góc bậc 1,hệ số góc bậc 2
+linear,R,p0,2,
+linear,P,p0,2,
+linear,P,p*,2,
+elastic,R,p0,1.97953,2.96404
+elastic,P,p0,1.96767,2.96025
+elastic,P,p*,1.95906,2.94959
